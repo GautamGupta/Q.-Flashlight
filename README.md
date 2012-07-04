@@ -11,10 +11,10 @@ The application opens up with a black screen, just click it which would make the
 Features
 ========
  * Simple, minimalistic design
- * Also enlightens up the screen with 100% brightness white color
+ * Also enlightens up the screen with white color on 100% brightness. This is useful for devices without a flashlight.
  * On Android 4.0 and above, you can even do other work on your mobile or lock the screen with the flashlight on
  * No ads whatsoever
- * Only asks for permission for the camera, nothing else
+ * Only asks for permission for the camera and flashlight, nothing else
  * Open source, licensed under GPLv3
  * Developed by Qandro.
 

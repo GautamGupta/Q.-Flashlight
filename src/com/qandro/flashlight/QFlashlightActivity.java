@@ -2,9 +2,9 @@ package com.qandro.flashlight;
 
 import java.io.IOException;
 
-import com.qandro.flashlight.R;
-
 import android.app.Activity;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
@@ -19,7 +19,8 @@ import android.widget.LinearLayout;
 
 public class QFlashlightActivity extends Activity {
 	
-	int oriBrightnessValue;
+	Integer oriBrightnessValue;
+	Boolean flashlightStatus = false; // false = off, true = on
 	Camera mCamera = null;
 	Parameters parameters;
 	LinearLayout flashControl;
@@ -57,81 +58,41 @@ public class QFlashlightActivity extends Activity {
 	
 	/**
 	 * Revert to original brightness
-	 * 
 	 * Also turn off the flashlight if api level < 14
+	 * And turn off the cam if we're not using it
 	 */
 	@Override
-	public void onDestroy() {
-		super.onDestroy();
+	public void onStop() {
+		super.onStop();
 		
 		// Revert to original brightness
 		setBrightness(oriBrightnessValue);
 		
 		// Turn off the flashlight if api level < 14 as leaving it on would result in a FC
-		if ( Integer.valueOf(android.os.Build.VERSION.SDK) < 14 ) {
+		if (Integer.valueOf(android.os.Build.VERSION.SDK) < 14 || flashlightStatus == false) {
 			turnOffFlashLight();
+			
+			// Turn off the cam if it is on
+			if (mCamera != null) {
+				mCamera.release();
+				mCamera = null;
+			}
 		}
 	}
 	
 	/**
-	 * Toggle the flashlight on/off status
+	 * Check if the device has a flashlight
+	 * @return True if the device has a flashlight, false if not
 	 */
-	public void toggleFlashLight() {
-		if (mCamera == null) { // Off, turn it on
-			turnOnFlashLight();
-		} else { // On, turn it off
-			turnOffFlashLight();
+	public Boolean deviceHasFlashlight() {
+		Context context = this;
+		PackageManager packageManager = context.getPackageManager();
+		
+		if (packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)) {
+			return true;
+		} else {
+			return false;
 		}
-	}
-	
-	/**
-	 * Turn on the flashlight.
-	 * 
-	 * Also set the background colour to white and brightness to max.
-	 */
-	public void turnOnFlashLight() {
-		// Safety measure if it's already on
-		turnOffFlashLight();
-		
-		// Turn on Cam
-		mCamera = Camera.open();
-		try {
-			mCamera.setPreviewDisplay(mHolder);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		// Turn on LED  
-		parameters = mCamera.getParameters();
-		parameters.setFlashMode(Parameters.FLASH_MODE_TORCH);
-		mCamera.setParameters(parameters);      
-		mCamera.startPreview();
-		
-		// Set background color
-		flashControl.setBackgroundColor(Color.WHITE);
-		
-		// Set brightness to max
-		setBrightness(100);
-	}
-	
-	/**
-	 * Turn off the flashlight if we find it to be on.
-	 * 
-	 * Also set the background to black and revert to original brightness
-	 */
-	public void turnOffFlashLight() {
-		
-		// Turn off cam
-		if (mCamera != null) {
-			mCamera.release();
-	        mCamera = null;
-		}
-		
-		// Set background color
-		flashControl.setBackgroundColor(Color.BLACK);
-		
-		// Revert to original brightness
-		setBrightness(oriBrightnessValue);
 	}
 	
 	/**
@@ -142,6 +103,80 @@ public class QFlashlightActivity extends Activity {
 	    WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
 	    layoutParams.screenBrightness = brightness/100.0f;
 	    getWindow().setAttributes(layoutParams);
+	}
+	
+	/**
+	 * Toggle the flashlight on/off status
+	 */
+	public void toggleFlashLight() {
+		if (flashlightStatus == false) { // Off, turn it on
+			turnOnFlashLight();
+		} else { // On, turn it off
+			turnOffFlashLight();
+		}
+	}
+	
+	/**
+	 * Turn on the flashlight if the device has one.
+	 * Also set the background colour to white and brightness to max.
+	 */
+	public void turnOnFlashLight() {
+		// Safety measure if it's already on
+		turnOffFlashLight();
+		
+		// Turn on the flash if the device has one
+		if (deviceHasFlashlight()) {
+			
+			// Switch on the cam for app's life
+			if (mCamera == null) {
+				// Turn on Cam
+				mCamera = Camera.open();
+				try {
+					mCamera.setPreviewDisplay(mHolder);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				mCamera.startPreview();
+			}
+	
+			// Turn on LED
+			parameters = mCamera.getParameters();
+			parameters.setFlashMode(Parameters.FLASH_MODE_TORCH);
+			mCamera.setParameters(parameters);
+		}
+		
+		// Set background color
+		flashControl.setBackgroundColor(Color.WHITE);
+		
+		// Set brightness to max
+		setBrightness(100);
+		
+		// Self awareness
+		flashlightStatus = true;
+	}
+	
+	/**
+	 * Turn off the flashlight if we find it to be on.
+	 * Also set the background to black and revert to original brightness
+	 */
+	public void turnOffFlashLight() {
+		// Turn off flashlight
+		if (mCamera != null) {
+			parameters = mCamera.getParameters();
+			if (parameters.getFlashMode().equals(Parameters.FLASH_MODE_TORCH)) {
+				parameters.setFlashMode(Parameters.FLASH_MODE_OFF);
+				mCamera.setParameters(parameters);
+			}
+		}
+		
+		// Set background color
+		flashControl.setBackgroundColor(Color.BLACK);
+		
+		// Revert to original brightness
+		setBrightness(oriBrightnessValue);
+		
+		// Self awareness
+		flashlightStatus = false;
 	}
 }
 
