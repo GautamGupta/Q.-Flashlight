@@ -47,11 +47,12 @@ public class QFlashlightActivity extends Activity {
 		mHolder = preview.getHolder();
 
 		flashControl.setOnClickListener(new LinearLayout.OnClickListener(){
-
+			
 			@Override
 			public void onClick(View arg0) {
 				toggleFlashLight();
-			}});
+			}
+		});
 	}
 	
 	/**

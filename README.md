@@ -18,6 +18,11 @@ Features
  * Open source, licensed under GPLv3
  * Developed by Qandro.
 
+Todo
+====
+ * Add an app logo
+ * Make the widget start the flashlight without opening the application
+
 License
 =======
 
