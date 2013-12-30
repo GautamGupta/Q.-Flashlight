@@ -3,6 +3,8 @@ Q. Flashlight
 
 The simplest, minimalistic, tiniest flashlight application ever, for Android!
 
+Try it now: https://play.google.com/store/apps/details?id=com.qandro.flashlight
+
 Usage
 =====
 
